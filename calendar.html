@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>calendar — moraezip</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@100;300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-section">
+
+  <div class="mobile-brand"><a href="index.html">moraezip</a></div>
+  <div class="ambient-crumb"><a href="index.html">← moraezip</a> &nbsp;/&nbsp; calendar</div>
+  <div class="ambient-time" id="time">—</div>
+
+  <main class="exhibition-frame">
+
+    <section class="panel-optic">
+      <a href="index.html" class="panel-link"><img class="panel-image" src="images/portrait.jpg" alt="portrait"></a>
+      <div class="signature-script">calendar</div>
+    </section>
+
+    <section class="panel-data">
+      <header class="meta-header">
+        <span>Calendar</span>
+        <span id="sys-date"></span>
+      </header>
+
+      <nav class="control-index">
+        <a class="index-item" href="index.html"><span class="item-num">00</span><span class="item-label">Home</span></a>
+        <a class="index-item" href="notes.html"><span class="item-num">01</span><span class="item-label">Notes</span></a>
+        <a class="index-item" href="archives.html"><span class="item-num">02</span><span class="item-label">Archives</span></a>
+        <a class="index-item active" href="calendar.html"><span class="item-num">03</span><span class="item-label">Calendar</span></a>
+        <a class="index-item" href="leave.html"><span class="item-num">04</span><span class="item-label">Leave a note</span></a>
+      </nav>
+
+      <div class="calendar-wrap">
+        <div class="cal-head">
+          <div class="cal-nav">
+            <button class="cal-btn" id="year-prev" aria-label="previous year">«</button>
+            <button class="cal-btn" id="month-prev" aria-label="previous month">‹</button>
+          </div>
+          <span class="cal-month" id="cal-month-label">—</span>
+          <div class="cal-nav">
+            <button class="cal-btn" id="month-next" aria-label="next month">›</button>
+            <button class="cal-btn" id="year-next" aria-label="next year">»</button>
+          </div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-day-posts" id="day-posts">
+          <div class="cal-day-head">Select a marked day</div>
+          <p class="entry-excerpt" style="font-size:0.7rem;">Dots mark days with entries. Click to see what was written.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="posts.js"></script>
+  <script>
+    const t = document.getElementById('time');
+    const renderTime = () => {
+      const d = new Date();
+      let h = d.getHours(), m = d.getMinutes();
+      const ap = h >= 12 ? 'p.m.' : 'a.m.';
+      h = h % 12 || 12;
+      t.textContent = `${h}:${String(m).padStart(2,'0')} ${ap}`;
+    };
+    renderTime(); setInterval(renderTime, 30000);
+
+    const sysDateEl = document.getElementById('sys-date');
+    if (sysDateEl) {
+      const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+      const dt = new Date();
+      sysDateEl.textContent = `${months[dt.getMonth()]} ${String(dt.getDate()).padStart(2,'0')}, ${dt.getFullYear()}`;
+    }
+
+    // Build a date-keyed map from posts.json (loaded async).
+    const posts = {};
+    const today = new Date();
+    const todayStr = today.toISOString().slice(0,10);
+    const dows = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const grid = document.getElementById('cal-grid');
+    const label = document.getElementById('cal-month-label');
+    const dayPosts = document.getElementById('day-posts');
+
+    // State — start on today's month.
+    let viewYear = today.getFullYear();
+    let viewMonth = today.getMonth();
+
+    function renderGrid() {
+      grid.innerHTML = '';
+      dows.forEach(d => {
+        const c = document.createElement('div');
+        c.className = 'cal-dow';
+        c.textContent = d;
+        grid.appendChild(c);
+      });
+
+      label.textContent = `${monthNames[viewMonth]} ${viewYear}`;
+
+      const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+      const lastDate = new Date(viewYear, viewMonth+1, 0).getDate();
+
+      for (let i = 0; i < firstDay; i++) {
+        const c = document.createElement('div');
+        c.className = 'cal-cell empty';
+        grid.appendChild(c);
+      }
+
+      for (let d = 1; d <= lastDate; d++) {
+        const key = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const c = document.createElement('div');
+        c.className = 'cal-cell';
+        if (posts[key]) c.classList.add('has-post');
+        if (key === todayStr) c.classList.add('today');
+        c.textContent = d;
+        c.dataset.key = key;
+        c.addEventListener('click', () => selectDay(key, c));
+        grid.appendChild(c);
+      }
+    }
+
+    function selectDay(key, cell) {
+      document.querySelectorAll('.cal-cell.selected').forEach(x => x.classList.remove('selected'));
+      cell.classList.add('selected');
+      const list = posts[key];
+      const head = new Date(key).toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+      if (!list) {
+        dayPosts.innerHTML = `<div class="cal-day-head">${head}</div><p class="entry-excerpt" style="font-size:0.7rem;">Nothing written that day.</p>`;
+        return;
+      }
+      dayPosts.innerHTML = `<div class="cal-day-head">${head} · ${list.length} entr${list.length>1?'ies':'y'}</div>` +
+        list.map(p => `
+          <a class="entry" href="post.html?id=${p.id}">
+            <span class="entry-date">${p.kind.toUpperCase()}</span>
+            <div>
+              <div class="entry-title">${p.title}</div>
+              <p class="entry-excerpt">${p.excerpt}</p>
+            </div>
+          </a>
+        `).join('');
+    }
+
+    function step(deltaYears, deltaMonths) {
+      const d = new Date(viewYear + deltaYears, viewMonth + deltaMonths, 1);
+      viewYear = d.getFullYear();
+      viewMonth = d.getMonth();
+      renderGrid();
+    }
+
+    document.getElementById('month-prev').addEventListener('click', () => step(0, -1));
+    document.getElementById('month-next').addEventListener('click', () => step(0,  1));
+    document.getElementById('year-prev').addEventListener('click',  () => step(-1, 0));
+    document.getElementById('year-next').addEventListener('click',  () => step( 1, 0));
+
+    window.POSTS_READY.then(() => {
+      Object.entries(window.POSTS).forEach(([id, p]) => {
+        const iso = p.isoDate || p.date;
+        const d = iso && iso.length <= 10 ? new Date(iso + 'T00:00:00') : new Date(iso);
+        if (isNaN(d)) return;
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        (posts[key] ||= []).push({ id, ...p });
+      });
+
+      renderGrid();
+
+      // Auto-select today.
+      const todayCell = grid.querySelector(`[data-key="${todayStr}"]`);
+      if (todayCell) selectDay(todayStr, todayCell);
+    });
+  </script>
+</body>
+</html>

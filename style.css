@@ -1,0 +1,1042 @@
+@font-face {
+  font-family: 'Biro Script';
+  src: url('fonts/Biro_Script_reduced.otf') format('opentype'),
+       url('fonts/Biro_Script_reduced.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --bg: #F5F5F5;
+  --paper: #F5F5F5;
+  --ink: #111111;
+  --ink-light: #444444;
+  --accent: #821797;
+  --font-sans: 'Biro Script', 'Noto Sans KR', 'Inter', -apple-system, sans-serif;
+  --font-mono: 'Biro Script', 'Noto Sans KR', 'JetBrains Mono', monospace;
+  --kr-body: 300;
+  --kr-title: 300;
+}
+
+/* Korean text falls through Biro Script to Noto Sans KR. Defaults to thin;
+   titles override to medium. Browser uses the weight-appropriate face when
+   rendering Korean glyphs (Biro Script is single-weight, so English is unaffected). */
+:lang(ko), body { font-weight: var(--kr-body); }
+h1, h2, h3, h4,
+.post-title, .entry-title, .gallery-title, .meta-header,
+.signature-script, .cal-month, .cal-day-head, .ambient-crumb,
+.entry-date, .post-date, .item-label, .item-num, .item-status,
+.gallery-sub, .entry-source, .post-source, .post-foot {
+  font-weight: var(--kr-title);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--bg);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  color: var(--ink);
+  overflow: hidden;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.ambient-time {
+  display: none;
+}
+
+.ambient-crumb {
+  position: fixed;
+  bottom: 2rem;
+  left: 2.5rem;
+  color: var(--ink-light);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.ambient-crumb a { opacity: 0.65; }
+.ambient-crumb a:hover { opacity: 1; }
+
+.exhibition-frame {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}
+
+.panel-optic {
+  flex: 1;
+  position: relative;
+  background: #F5F5F5;
+  border-right: 1px solid #F5F5F5;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panel-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+.panel-data {
+  flex: 1;
+  background-color: var(--paper);
+  position: relative;
+  padding: 3rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.meta-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.75rem;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  margin-bottom: 3rem;
+}
+
+.meta-header > span:first-child {
+  /* Biro Script (inherits from --font-sans) — the human-facing label */
+  font-size: 2.55rem;
+  line-height: 1.05;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Homepage's top-left "moraezip" matches the bottom signature size */
+body.home .meta-header > span:first-child { font-size: 4rem; }
+
+/* Hide the bottom-left signature script everywhere — the nav now sits there */
+.signature-script { display: none; }
+
+.meta-header > span:last-child {
+  /* Mono — the machine-style system tag */
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.abstract {
+  font-size: 0.82rem;
+  line-height: 1.7;
+  font-weight: 300;
+  width: 90%;
+  margin-bottom: 2rem;
+  color: var(--ink);
+}
+
+.abstract p {
+  margin-bottom: 0.9rem;
+}
+
+.abstract p:last-child { margin-bottom: 0; }
+
+.abstract sup {
+  font-size: 0.55rem;
+  vertical-align: super;
+  font-weight: 300;
+}
+
+.control-index {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: auto;
+  margin-bottom: 3.5rem;
+}
+
+.index-item {
+  display: flex;
+  align-items: baseline;
+  gap: 1.5rem;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.item-num { display: none; }
+
+.item-label {
+  font-size: 0.85rem;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  transition: color 0.2s ease;
+}
+
+.item-dots {
+  flex-grow: 1;
+  border-bottom: 1px dotted rgba(17, 17, 17, 0.2);
+  margin: 0 10px;
+  position: relative;
+  top: -4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.index-item:not(.active) .item-num { color: var(--ink-light); font-weight: 300; }
+.index-item:not(.active) .item-label { color: var(--ink-light); }
+.index-item:not(.active):hover .item-label { color: var(--ink); }
+.index-item:not(.active):hover .item-num { color: var(--ink); }
+.index-item:not(.active):hover .item-dots { opacity: 0.6; }
+
+.index-item.active .item-num {
+  font-weight: 300;
+  color: var(--accent);
+  transform: scale(1.1);
+  transform-origin: left center;
+}
+
+.index-item.active .item-label { color: var(--accent); font-weight: 300; }
+.index-item.active .item-dots { opacity: 1; }
+
+.item-status {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0;
+}
+
+.index-item.active .item-status { opacity: 1; }
+
+.footnotes-cluster {
+  position: absolute;
+  right: 2.5rem;
+  top: 40%;
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 0.2rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  line-height: 1;
+}
+
+.fn-row { display: contents; }
+.fn-num { text-align: right; color: var(--ink-light); }
+
+.display-element {
+  position: absolute;
+  font-weight: 300;
+  letter-spacing: -0.05em;
+  pointer-events: none;
+}
+
+.display-ca {
+  top: 45%;
+  right: 4.5rem;
+  font-size: 2rem;
+  transform: scaleX(1.5);
+  transform-origin: right;
+}
+
+.display-rus {
+  bottom: 6rem;
+  left: 2.5rem;
+  font-size: 1.8rem;
+}
+
+.system-signature {
+  position: absolute;
+  bottom: 2.5rem;
+  right: 2.5rem;
+  text-align: right;
+  font-size: 0.6rem;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.signature-script {
+  position: absolute;
+  bottom: 2.5rem;
+  left: 2.5rem;
+  font-size: 2rem;
+  font-family: 'Biro Script', serif;
+  letter-spacing: 0;
+  font-weight: 300;
+  color: #111;
+  mix-blend-mode: multiply;
+}
+
+/* ============================================================ */
+/*                       FEED (NOTES / ARCHIVES)                */
+/* ============================================================ */
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  margin-bottom: 3.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(17,17,17,0.25) transparent;
+}
+
+.feed::-webkit-scrollbar { width: 4px; }
+.feed::-webkit-scrollbar-thumb { background: rgba(17,17,17,0.2); border-radius: 2px; }
+
+.entry {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1.25rem;
+  align-items: baseline;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px dotted rgba(17,17,17,0.15);
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease, padding 0.15s ease;
+}
+
+a.entry {
+  padding: 0.5rem 0.6rem 1rem;
+  margin: 0 -0.6rem;
+  border-radius: 2px;
+}
+
+a.entry:hover {
+  background: rgba(130, 23, 151, 0.05);
+}
+
+a.entry:hover .entry-title { color: var(--accent); }
+
+.entry:last-child { border-bottom: none; }
+
+.entry-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  color: var(--ink-light);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.entry-title {
+  font-size: 0.9rem;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.35rem;
+}
+
+.entry-title .idx {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--accent);
+  margin-right: 0.5rem;
+  vertical-align: baseline;
+}
+
+.entry-excerpt {
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--ink-light);
+}
+
+.entry-excerpt em { font-style: italic; color: var(--ink); }
+.entry-source {
+  display: block;
+  margin-top: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ============================================================ */
+/*                       GALLERY (ARCHIVES)                     */
+/* ============================================================ */
+
+.gallery {
+  column-count: 4;
+  column-gap: 0.75rem;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  margin-bottom: 3.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(17,17,17,0.25) transparent;
+}
+.gallery::-webkit-scrollbar { width: 4px; }
+.gallery::-webkit-scrollbar-thumb { background: rgba(17,17,17,0.2); border-radius: 2px; }
+
+.gallery-item {
+  display: block;
+  break-inside: avoid;
+  margin-bottom: 1.25rem;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease;
+}
+
+.gallery-item:hover { transform: translateY(-2px); }
+.gallery-item:hover .gallery-title { color: var(--accent); }
+.gallery-item:hover .gallery-frame { box-shadow: 0 8px 18px rgba(0,0,0,0.08); }
+
+.gallery-frame {
+  overflow: hidden;
+  background: #F5F5F5;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s ease;
+  margin-bottom: 0.6rem;
+}
+
+.gallery-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: transform 0.5s ease;
+}
+
+.gallery-item:hover .gallery-img { transform: scale(1.03); }
+
+.gallery-title {
+  font-size: 0.72rem;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  color: var(--ink);
+  transition: color 0.2s ease;
+}
+
+/* ============================================================ */
+/*                          CALENDAR                            */
+/* ============================================================ */
+
+.calendar-wrap {
+  margin-top: 0.5rem;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(17,17,17,0.25) transparent;
+}
+.calendar-wrap::-webkit-scrollbar { width: 4px; }
+.calendar-wrap::-webkit-scrollbar-thumb { background: rgba(17,17,17,0.2); border-radius: 2px; }
+
+.cal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-light);
+}
+
+.cal-nav {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.cal-btn {
+  background: transparent;
+  border: none;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1;
+  width: 1.4rem;
+  height: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+
+.cal-btn:hover { color: var(--accent); }
+
+.cal-month {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+  text-transform: uppercase;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+}
+
+.cal-dow {
+  font-family: 'JetBrains Mono', monospace;
+  text-align: center;
+  padding: 0.35rem 0;
+  font-size: 0.55rem;
+  color: var(--ink-light);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cal-cell {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-light);
+  border: 1px solid transparent;
+  position: relative;
+  cursor: default;
+  transition: background 0.15s ease;
+}
+
+.cal-cell.empty { color: transparent; }
+.cal-cell.has-post { color: var(--ink); cursor: pointer; }
+.cal-cell.has-post::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  width: 4px;
+  height: 4px;
+  background: var(--accent);
+  border-radius: 50%;
+}
+.cal-cell.has-post:hover { background: rgba(30,102,197,0.08); }
+.cal-cell.selected {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--accent);
+}
+.cal-cell.selected::after { background: var(--accent); }
+.cal-cell.today { border-color: rgba(17,17,17,0.3); }
+
+.cal-day-posts {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px dotted rgba(17,17,17,0.2);
+}
+
+.cal-day-posts .entry { padding-bottom: 0.75rem; }
+.cal-day-head {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.7rem;
+}
+
+/* ============================================================ */
+/*                       POST VIEW                              */
+/* ============================================================ */
+
+.post-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0.75rem;
+  margin-bottom: 1.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(17,17,17,0.25) transparent;
+}
+.post-body::-webkit-scrollbar { width: 4px; }
+.post-body::-webkit-scrollbar-thumb { background: rgba(17,17,17,0.2); border-radius: 2px; }
+
+.post-hero {
+  margin: 0 0 1.5rem;
+  background: #F5F5F5;
+}
+.post-hero img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.post-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  margin-bottom: 0.75rem;
+}
+
+.post-title {
+  font-size: 1.8rem;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  margin-bottom: 1.75rem;
+  color: var(--ink);
+}
+
+.post-body p {
+  font-size: 0.88rem;
+  line-height: 1.65;
+  margin-bottom: 1rem;
+  color: var(--ink);
+}
+
+.post-body p:last-child { margin-bottom: 0; }
+
+.post-body em { font-style: italic; }
+
+.post-body blockquote {
+  font-size: 1.05rem;
+  line-height: 1.5;
+  padding: 0.25rem 0 0.25rem 1rem;
+  border-left: 2px solid var(--accent);
+  margin: 1rem 0 1.25rem;
+  color: var(--ink);
+  font-style: italic;
+}
+
+.post-body code {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  background: rgba(130,23,151,0.08);
+  padding: 0.1rem 0.35rem;
+  border-radius: 2px;
+}
+
+.post-foot {
+  padding-top: 1rem;
+  border-top: 1px dotted rgba(17,17,17,0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.post-source {
+  color: var(--accent);
+}
+
+.post-back {
+  color: var(--ink-light);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.post-back:hover { color: var(--accent); }
+
+/* ============================================================ */
+/*                       LEAVE A NOTE FORM                      */
+/* ============================================================ */
+
+.note-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  margin-bottom: 2rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.note-intro {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--ink-light);
+  margin-bottom: 0.5rem;
+}
+
+.note-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.note-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+}
+
+.note-label em {
+  font-style: normal;
+  opacity: 0.6;
+  text-transform: none;
+  letter-spacing: 0.05em;
+}
+
+.note-form input,
+.note-form textarea {
+  font-family: inherit;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(17,17,17,0.2);
+  padding: 0.4rem 0;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+  width: 100%;
+  font-weight: var(--kr-body);
+}
+
+.note-form input:focus,
+.note-form textarea:focus {
+  border-bottom-color: var(--accent);
+}
+
+.note-form textarea {
+  min-height: 100px;
+  font-size: 0.9rem;
+}
+
+.note-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.25rem;
+}
+
+.note-submit {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.5rem 1.1rem;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.note-submit:hover {
+  color: white;
+  background: var(--accent);
+}
+
+.note-hint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+}
+
+/* ============================================================ */
+/*              DESKTOP — nav overlaid on the photo             */
+/* ============================================================ */
+
+@media (min-width: 769px) {
+  .exhibition-frame { position: relative; }
+
+  /* Drop panel-data's positioning context + overflow clipping on desktop so the
+     nav can absolute-position relative to the whole frame and render over
+     Section A. System-signature (right: 2.5rem; bottom: 2.5rem) is unaffected
+     visually because its new positioning context (the frame) has the same
+     bottom-right corner as panel-data did. */
+  .panel-data { position: static; overflow: visible; }
+
+  /* Nav overlaid on Section A (photo panel), bottom-left, left-aligned stack */
+  .control-index {
+    position: absolute;
+    left: 2.5rem;
+    bottom: 2.5rem;
+    z-index: 3;
+    width: auto;
+    max-width: 30vw;
+    margin: 0;
+    gap: 0.2rem;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .index-item { gap: 4.5rem; justify-content: flex-start; width: auto; }
+  .item-num { font-size: 2.1rem; }
+  .item-label { font-size: 2.55rem; line-height: 1.05; }
+  .item-status { font-size: 1.8rem; }
+
+  /* ── Homepage PC: single-canvas layout matching reference
+     Portrait centered at natural aspect, "Moraezip" on the right,
+     menu stacked at bottom-left. */
+  body.home .exhibition-frame { display: block; }
+
+  body.home .panel-optic {
+    position: absolute;
+    inset: 0;
+    flex: none;
+    background: transparent;
+    border: none;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  body.home .panel-image {
+    position: static;
+    width: auto;
+    height: auto;
+    max-width: 50vw;
+    max-height: 85vh;
+    object-fit: contain;
+  }
+
+  body.home .panel-data {
+    position: static;
+    width: 0;
+    flex: none;
+    padding: 0;
+    background: transparent;
+    overflow: visible;
+  }
+
+  /* "Moraezip" heading — right of the photo, vertically centered */
+  body.home .meta-header {
+    position: absolute;
+    top: 50%;
+    right: 5rem;
+    transform: translateY(-50%);
+    margin: 0;
+    display: block;
+    text-align: left;
+    z-index: 3;
+  }
+
+}
+
+/* Homepage: hide the abstract Korean text and the sys-date in meta-header */
+body.home .abstract { display: none; }
+body.home #sys-date { display: none; }
+
+/* Homepage: drop the redundant "Home" menu item (user is already home) */
+body.home .control-index .index-item:first-child { display: none; }
+
+/* ============================================================ */
+/*                           MOBILE                             */
+/* ============================================================ */
+
+.mobile-brand { display: none; }
+
+@media (max-width: 768px) {
+
+  body {
+    display: block;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0;
+    background: var(--paper);
+  }
+
+  /* Mobile brand heading — only on subpages */
+  .mobile-brand {
+    display: block;
+    padding: 0.6rem 1.25rem 0.2rem;
+    font-family: 'Biro Script', serif;
+    font-size: 3.2rem;
+    line-height: 1;
+    letter-spacing: 0;
+    color: var(--ink);
+  }
+  .mobile-brand a { color: inherit; text-decoration: none; }
+
+  body.home { padding: 0; }
+  body:not(.home) { padding: 0 0 3rem; }
+
+  /* Hide section header on notes/archives/calendar (mobile only) */
+  body.page-section .meta-header { display: none; }
+
+  /* Hide post kind label on mobile (post.html) */
+  #post-kind { display: none; }
+
+  .exhibition-frame {
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    min-height: auto;
+    box-shadow: none;
+  }
+
+  /* Homepage only — photo fills the viewport, text overlaid on top */
+  body.home .exhibition-frame {
+    flex-direction: row;
+    position: relative;
+    min-height: 100vh;
+  }
+  body.home .panel-optic {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    flex: none;
+    border: none;
+    background: transparent;
+    z-index: 0;
+  }
+  body.home .panel-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+  body.home .panel-data {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+    min-height: 100vh;
+    flex: none;
+    width: 100%;
+  }
+  body.home .signature-script { z-index: 2; }
+
+  /* Subpages — show the photo at natural aspect ratio, small, fixed bottom-right */
+  body.page-section .panel-optic {
+    display: block;
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    flex: none;
+    border: none;
+    background: transparent;
+    z-index: 20;
+    padding: 0;
+  }
+  body.page-section .panel-image {
+    position: static;
+    width: auto;
+    height: 80px;
+    display: block;
+    object-fit: contain;
+  }
+  body.page-section .panel-optic .signature-script { display: none; }
+  /* post.html has no page-section class — keep the original hide behavior */
+  body:not(.home):not(.page-section) .panel-optic { display: none; }
+
+  .panel-data {
+    flex: 1;
+    padding: 0.75rem 1.25rem 2rem;
+  }
+
+  .signature-script {
+    bottom: 1rem;
+    left: 1rem;
+    font-size: 1.6rem;
+  }
+
+  /* On subpages hide crumb/time overlap — crumb moves inline near mobile-brand */
+  body.home .ambient-time {
+    bottom: auto; top: 1rem; right: 1.25rem; font-size: 0.85rem;
+  }
+  body.home .ambient-crumb {
+    bottom: auto; top: 1rem; left: 1.25rem; font-size: 0.6rem;
+  }
+
+  body:not(.home) .ambient-time { display: none; }
+  /* Hide breadcrumb on mobile subpages — the horizontal nav below replaces it */
+  body:not(.home) .ambient-crumb { display: none; }
+
+  .meta-header { margin-bottom: 1.75rem; }
+  .meta-header > span:first-child { font-size: 2rem; }
+  .meta-header > span:last-child  { font-size: 0.55rem; }
+  body.home .meta-header > span:first-child { font-size: 3.2rem; }
+
+  .abstract {
+    font-size: 0.88rem;
+    line-height: 1.75;
+    width: 100%;
+    margin-bottom: 1.75rem;
+  }
+
+  /* Reset the desktop absolute-positioned nav back to in-flow on mobile */
+  .control-index { position: static; width: auto; }
+
+  /* Home keeps the original vertical nav on mobile */
+  body.home .control-index { margin-bottom: 1.5rem; gap: 0.2rem; }
+  body.home .index-item { gap: 1rem; }
+  body.home .item-label { font-size: 1.5rem; line-height: 1.05; }
+
+  /* Subpages only — horizontal menu-bar nav on mobile */
+  body:not(.home) .control-index {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 1.1rem;
+    margin-top: 0;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px dotted rgba(17,17,17,0.12);
+  }
+  body:not(.home) .index-item { gap: 0.3rem; flex: 0 0 auto; }
+  body:not(.home) .item-label { font-size: 1.5rem; line-height: 1.05; }
+  body:not(.home) .item-num { font-size: 0.55rem; }
+  body:not(.home) .item-dots,
+  body:not(.home) .item-status { display: none; }
+  /* Drop "Home" from the horizontal subpage menu — mobile-brand already links home */
+  body:not(.home) .control-index .index-item:first-child { display: none; }
+
+  /* Feed — let the whole page scroll */
+  .feed { overflow: visible; margin-bottom: 0; padding-right: 0; }
+
+  /* Gallery — 2 columns on mobile */
+  .gallery {
+    column-count: 2;
+    column-gap: 0.75rem;
+    overflow: visible;
+    margin-bottom: 0;
+    padding-right: 0;
+  }
+  .gallery-title { font-size: 0.8rem; }
+
+  /* Calendar — keep 7 cols, natural height */
+  .calendar-wrap { overflow: visible; padding-right: 0; flex: none; }
+  .cal-grid { font-size: 0.8rem; }
+  .cal-month { font-size: 1.4rem; }
+  .cal-btn { font-size: 1.1rem; width: 1.8rem; height: 1.8rem; }
+
+  /* Post view */
+  .post-body { overflow: visible; padding-right: 0; margin-bottom: 1.5rem; }
+  .post-title { font-size: 1.5rem; margin-bottom: 1.25rem; }
+  .post-body p { font-size: 0.92rem; line-height: 1.7; }
+  .post-hero { margin-bottom: 1.25rem; }
+  .post-foot { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+}
+
+@media (max-width: 400px) {
+  .panel-data { padding: 1.5rem 1rem 1.75rem; }
+  .meta-header > span:first-child { font-size: 1.9rem; }
+  .signature-script { font-size: 1.4rem; }
+  body.home .meta-header > span:first-child { font-size: 2.8rem; }
+  .mobile-brand { font-size: 2.8rem; }
+}

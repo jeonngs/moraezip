@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>moraezip</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@100;300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="home">
+
+  <div class="ambient-time" id="time">—</div>
+
+  <main class="exhibition-frame">
+
+    <section class="panel-optic">
+      <img class="panel-image" src="images/portrait.jpg" alt="portrait">
+      <div class="signature-script">moraezip</div>
+    </section>
+
+    <section class="panel-data">
+      <header class="meta-header">
+        <span><a href="index.html">moraezip</a></span>
+        <span id="sys-date"></span>
+      </header>
+
+      <div class="abstract" lang="ko">
+        <p>삶에 서사를 부여하는 일.</p>
+        <p>무작위적인 사건의 총체로서의 삶이 아닌<br>
+        나에게 일어난 삶의 사건들을 절묘하게 직조된 하나의 서사로 연결해 내는 일.<br>
+        그래서 나에게 일어난 어떤 일도 낭비되지 않게 하는 일.</p>
+        <p>하나의 개별적 사건을 나의 삶으로 연결해 내는 건 그런 일이다.<br>
+        좋은 일이든, 나쁜 일이든…<br>
+        그러면 삶의 사건들이 파편화된 정보들이 아닌<br>
+        한 이야기 속의 장치가 된다.</p>
+      </div>
+
+      <nav class="control-index">
+        <a class="index-item active" href="index.html">
+          <span class="item-num">00</span>
+          <span class="item-label">Home</span>
+        </a>
+        <a class="index-item" href="notes.html">
+          <span class="item-num">01</span>
+          <span class="item-label">Notes</span>
+        </a>
+        <a class="index-item" href="archives.html">
+          <span class="item-num">02</span>
+          <span class="item-label">Archives</span>
+        </a>
+        <a class="index-item" href="calendar.html">
+          <span class="item-num">03</span>
+          <span class="item-label">Calendar</span>
+        </a>
+        <a class="index-item" href="leave.html">
+          <span class="item-num">04</span>
+          <span class="item-label">Leave a note</span>
+        </a>
+      </nav>
+
+    </section>
+
+  </main>
+
+  <script>
+    const t = document.getElementById('time');
+    const render = () => {
+      const d = new Date();
+      let h = d.getHours(), m = d.getMinutes();
+      const ap = h >= 12 ? 'p.m.' : 'a.m.';
+      h = h % 12 || 12;
+      t.textContent = `${h}:${String(m).padStart(2,'0')} ${ap}`;
+    };
+    render(); setInterval(render, 30000);
+
+    const sysDateEl = document.getElementById('sys-date');
+    if (sysDateEl) {
+      const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+      const dt = new Date();
+      sysDateEl.textContent = `${months[dt.getMonth()]} ${String(dt.getDate()).padStart(2,'0')}, ${dt.getFullYear()}`;
+    }
+  </script>
+</body>
+</html>
