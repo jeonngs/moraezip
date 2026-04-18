@@ -3,21 +3,613 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>moraezip — admin</title>
+  <title>studio — moraezip</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@100;300;400;500;700&display=swap" rel="stylesheet" />
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <style>
+    :root {
+      --bg: #f5f1e8;
+      --paper: #fbf8f1;
+      --ink: #1b1b1b;
+      --sub: #7a7168;
+      --line: #d8cfbf;
+      --accent: #2a2a2a;
+      --danger: #9a4a3a;
+      --ok: #4a6b4a;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg); color: var(--ink);
+      font-family: 'Inter', 'Noto Sans KR', sans-serif;
+      font-size: 15px; line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; }
+
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1.2rem 2rem;
+      border-bottom: 1px solid var(--line);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    .topbar .brand a { text-decoration: none; }
+    .topbar .brand a:hover { text-decoration: underline; text-underline-offset: 3px; }
+    .topbar .right { display: flex; align-items: center; gap: 1.2rem; }
+    .topbar button, .topbar .link {
+      background: none; border: none; color: var(--sub);
+      cursor: pointer; font: inherit; padding: 0; letter-spacing: inherit;
+      text-transform: inherit; text-decoration: none;
+    }
+    .topbar button:hover, .topbar .link:hover { color: var(--ink); }
+
+    .status {
+      font-size: 0.68rem; color: var(--sub);
+      min-height: 1em;
+    }
+    .status.ok { color: var(--ok); }
+    .status.err { color: var(--danger); }
+
+    .main { max-width: 780px; margin: 0 auto; padding: 3.5rem 2rem 6rem; }
+
+    .page-head {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 2.2rem;
+    }
+    .page-head h1 {
+      font-size: 1.35rem; font-weight: 300;
+      margin: 0; letter-spacing: -0.01em;
+    }
+    .page-head .count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem; color: var(--sub);
+      letter-spacing: 0.12em; text-transform: uppercase;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      background: var(--accent); color: var(--paper);
+      padding: 0.65rem 1.2rem;
+      border: none; font-family: inherit;
+      font-size: 0.72rem; letter-spacing: 0.14em;
+      text-transform: uppercase; cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-primary:hover { background: #000; }
+    .btn-ghost {
+      display: inline-block;
+      background: none; border: 1px solid var(--line);
+      color: var(--ink); padding: 0.65rem 1.2rem;
+      font: inherit; font-size: 0.72rem; letter-spacing: 0.14em;
+      cursor: pointer; text-transform: uppercase; text-decoration: none;
+    }
+    .btn-ghost:hover { border-color: var(--ink); }
+    .btn-danger { color: var(--danger); }
+
+    /* List */
+    .post-list { border-top: 1px solid var(--line); }
+    .post-row {
+      display: grid;
+      grid-template-columns: 70px 70px 1fr auto;
+      gap: 1.2rem;
+      padding: 1.1rem 0;
+      border-bottom: 1px solid var(--line);
+      align-items: center;
+    }
+    .post-row .date, .post-row .kind {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem; color: var(--sub);
+      letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .post-row .title {
+      font-size: 0.98rem; font-weight: 400;
+      color: var(--ink); text-decoration: none;
+    }
+    .post-row .title:hover { text-decoration: underline; text-underline-offset: 3px; }
+    .post-row .row-actions { display: flex; gap: 1rem; }
+    .post-row .row-actions a, .post-row .row-actions button {
+      background: none; border: none; color: var(--sub);
+      font: inherit; font-size: 0.7rem; cursor: pointer;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      text-decoration: none; padding: 0;
+    }
+    .post-row .row-actions a:hover, .post-row .row-actions button:hover { color: var(--ink); }
+    .post-row .row-actions .del:hover { color: var(--danger); }
+
+    /* Form */
+    .form { display: grid; gap: 1.4rem; }
+    .field label {
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem; color: var(--sub);
+      text-transform: uppercase; letter-spacing: 0.14em;
+      margin-bottom: 0.45rem;
+    }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      padding: 0.75rem 0.95rem;
+      font-family: inherit; font-size: 0.95rem;
+      color: var(--ink); border-radius: 0;
+      outline: none;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: var(--ink);
+    }
+    .field textarea {
+      resize: vertical; min-height: 13rem; line-height: 1.7;
+    }
+    .field .body-editor {
+      min-height: 24rem;
+      font-size: 1rem;
+      line-height: 1.8;
+      font-family: 'Inter', 'Noto Sans KR', sans-serif;
+    }
+    .field .hint {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--sub); margin-top: 0.4rem;
+      letter-spacing: 0.05em;
+    }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .row-archive { display: none; }
+    body.kind-archive .row-archive { display: grid; }
+    .form-actions {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 1.5rem; border-top: 1px solid var(--line);
+      margin-top: 1rem;
+    }
+
+    /* Login */
+    .login-wrap {
+      max-width: 380px; margin: 8rem auto 0;
+      padding: 2.5rem; border: 1px solid var(--line);
+      background: var(--paper);
+      text-align: center;
+    }
+    .login-wrap h1 {
+      font-size: 1.15rem; font-weight: 400;
+      margin: 0 0 0.8rem;
+    }
+    .login-wrap p {
+      color: var(--sub); font-size: 0.85rem;
+      margin: 0 0 1.4rem;
+    }
+
+    .empty {
+      color: var(--sub); font-size: 0.9rem;
+      padding: 4rem 0; text-align: center;
+    }
+
+    .loading {
+      text-align: center; padding: 4rem 0;
+      color: var(--sub); font-size: 0.8rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    @media (max-width: 600px) {
+      .main { padding: 2rem 1.2rem 5rem; }
+      .post-row { grid-template-columns: 60px 1fr; grid-template-rows: auto auto; gap: 0.3rem 0.8rem; }
+      .post-row .kind { grid-column: 1; grid-row: 2; }
+      .post-row .title { grid-column: 2; grid-row: 1 / span 2; }
+      .post-row .row-actions { grid-column: 1 / -1; margin-top: 0.3rem; }
+      .row-2 { grid-template-columns: 1fr; }
+      .topbar { padding: 1rem 1.2rem; flex-wrap: wrap; gap: 0.5rem; }
+    }
+  </style>
 </head>
 <body>
-  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  <div id="root"><div class="loading">loading…</div></div>
+
   <script>
-    if (window.netlifyIdentity) {
-      window.netlifyIdentity.on('init', (user) => {
-        if (!user) {
-          window.netlifyIdentity.on('login', () => {
-            document.location.href = '/admin/';
-          });
-        }
+  (function () {
+    const REPO_API = '/.netlify/git/github';
+    const POSTS_PATH = 'posts.json';
+    const IMG_PATH_PREFIX = 'images/uploads/';
+
+    const state = {
+      user: null,
+      posts: [],
+      postsSha: null,
+      view: 'list',
+      editId: null,
+      status: '',
+    };
+
+    const root = document.getElementById('root');
+
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const todayIso = () => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    };
+    const shortDate = iso => {
+      if (!iso) return '—';
+      const d = new Date(iso.length <= 10 ? iso + 'T00:00:00' : iso);
+      if (isNaN(d)) return '—';
+      const m = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+      return `${m[d.getMonth()]} ${String(d.getDate()).padStart(2,'0')}`;
+    };
+    const b64Decode = b64 => {
+      const bin = atob(b64.replace(/\s/g, ''));
+      const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+      return new TextDecoder('utf-8').decode(bytes);
+    };
+    const b64Encode = s => {
+      const bytes = new TextEncoder().encode(s);
+      let bin = '';
+      bytes.forEach(b => bin += String.fromCharCode(b));
+      return btoa(bin);
+    };
+
+    async function authHeaders() {
+      const token = await state.user.jwt();
+      return { 'Authorization': `Bearer ${token}` };
+    }
+    async function fetchPosts() {
+      const r = await fetch(`${REPO_API}/contents/${POSTS_PATH}?ref=main`, {
+        headers: await authHeaders(),
+      });
+      if (!r.ok) throw new Error(`불러오기 실패 (${r.status})`);
+      const data = await r.json();
+      const content = b64Decode(data.content || '');
+      const parsed = JSON.parse(content);
+      state.posts = parsed.posts || [];
+      state.postsSha = data.sha;
+    }
+    async function savePosts(msg) {
+      const content = JSON.stringify({ posts: state.posts }, null, 2) + '\n';
+      const body = {
+        message: msg,
+        content: b64Encode(content),
+        sha: state.postsSha,
+        branch: 'main',
+      };
+      const r = await fetch(`${REPO_API}/contents/${POSTS_PATH}`, {
+        method: 'PUT',
+        headers: { ...(await authHeaders()), 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) {
+        const t = await r.text();
+        throw new Error(`저장 실패 (${r.status}): ${t}`);
+      }
+      const j = await r.json();
+      state.postsSha = j.content && j.content.sha;
+    }
+    async function uploadImage(file) {
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const ts = new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14);
+      const rand = Math.random().toString(36).slice(2, 8);
+      const path = `${IMG_PATH_PREFIX}${ts}-${rand}.${ext}`;
+      const buf = await file.arrayBuffer();
+      let bin = '';
+      new Uint8Array(buf).forEach(b => bin += String.fromCharCode(b));
+      const body = {
+        message: `upload ${path}`,
+        content: btoa(bin),
+        branch: 'main',
+      };
+      const r = await fetch(`${REPO_API}/contents/${path}`, {
+        method: 'PUT',
+        headers: { ...(await authHeaders()), 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) {
+        const t = await r.text();
+        throw new Error(`이미지 업로드 실패 (${r.status}): ${t}`);
+      }
+      return path;
+    }
+
+    function setStatus(msg, kind) {
+      state.status = msg;
+      const el = document.querySelector('.status');
+      if (el) {
+        el.textContent = msg;
+        el.className = 'status' + (kind ? ' ' + kind : '');
+      }
+    }
+
+    function render() {
+      if (!state.user) {
+        root.innerHTML = renderLogin();
+        document.body.className = '';
+        attachLoginHandlers();
+        return;
+      }
+      root.innerHTML = renderShell();
+      const v = document.getElementById('view');
+      if (state.view === 'list') {
+        v.innerHTML = renderList();
+        attachListHandlers();
+      } else {
+        v.innerHTML = renderEditor();
+        attachEditorHandlers();
+      }
+    }
+
+    function renderLogin() {
+      return `
+        <div class="login-wrap">
+          <h1>moraezip / studio</h1>
+          <p>들어가려면 로그인하세요.</p>
+          <button class="btn-primary" id="login-btn">로그인</button>
+        </div>
+      `;
+    }
+
+    function renderShell() {
+      return `
+        <div class="topbar">
+          <div class="brand"><a href="#/">moraezip / studio</a></div>
+          <div class="right">
+            <span class="status"></span>
+            <a class="link" href="/" target="_blank">사이트 보기 ↗</a>
+            <button id="logout-btn">로그아웃</button>
+          </div>
+        </div>
+        <div class="main" id="view"></div>
+      `;
+    }
+
+    function renderList() {
+      if (!state.posts.length) {
+        return `
+          <div class="page-head">
+            <h1>글 목록</h1>
+            <a class="btn-primary" href="#/new">+ 새 글</a>
+          </div>
+          <div class="empty">아직 글이 없습니다. 첫 글을 써보세요.</div>
+        `;
+      }
+      const sorted = [...state.posts].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      const rows = sorted.map(p => `
+        <div class="post-row">
+          <span class="date">${esc(shortDate(p.date))}</span>
+          <span class="kind">${esc(p.kind || '')}</span>
+          <a class="title" href="#/edit/${encodeURIComponent(p.id)}">${esc(p.title || '(제목 없음)')}</a>
+          <div class="row-actions">
+            <a href="/post.html?id=${encodeURIComponent(p.id)}" target="_blank">보기</a>
+            <button class="del" data-id="${esc(p.id)}">삭제</button>
+          </div>
+        </div>
+      `).join('');
+      return `
+        <div class="page-head">
+          <div>
+            <h1>글 목록</h1>
+            <div class="count" style="margin-top:0.4rem;">${state.posts.length} entries</div>
+          </div>
+          <a class="btn-primary" href="#/new">+ 새 글</a>
+        </div>
+        <div class="post-list">${rows}</div>
+      `;
+    }
+
+    function suggestId(kind) {
+      const prefix = kind === 'note' ? 'N' : 'A';
+      const nums = state.posts
+        .filter(p => p.id && p.id.startsWith(prefix))
+        .map(p => parseInt(p.id.slice(1), 10))
+        .filter(n => !isNaN(n));
+      const next = nums.length ? Math.max(...nums) + 1 : 1;
+      return `${prefix}${String(next).padStart(2, '0')}`;
+    }
+
+    function renderEditor() {
+      const isNew = state.view === 'new';
+      const p = isNew
+        ? { id: suggestId('note'), kind: 'note', date: todayIso(), title: '', excerpt: '', body: '', image: '', source: '' }
+        : (state.posts.find(x => x.id === state.editId) || { id: state.editId });
+      document.body.className = `kind-${p.kind || 'note'}`;
+      return `
+        <div class="page-head">
+          <h1>${isNew ? '새 글' : '글 수정'}</h1>
+          <a class="btn-ghost" href="#/">← 목록으로</a>
+        </div>
+        <form class="form" id="post-form">
+          <div class="row-2">
+            <div class="field">
+              <label>종류</label>
+              <select name="kind" id="kind-sel">
+                <option value="note" ${p.kind==='note'?'selected':''}>note · 일기</option>
+                <option value="archive" ${p.kind==='archive'?'selected':''}>archive · 스니펫</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>날짜</label>
+              <input type="date" name="date" value="${esc(p.date || '')}" required />
+            </div>
+          </div>
+          <div class="field">
+            <label>ID</label>
+            <input type="text" name="id" value="${esc(p.id || '')}" required ${isNew ? '' : 'readonly'} />
+            <div class="hint">URL에 쓰이는 고유값. N = note, A = archive.</div>
+          </div>
+          <div class="field">
+            <label>제목</label>
+            <input type="text" name="title" value="${esc(p.title || '')}" required />
+          </div>
+          <div class="field">
+            <label>한줄 요약</label>
+            <input type="text" name="excerpt" value="${esc(p.excerpt || '')}" />
+            <div class="hint">목록 페이지에 미리보기로 보이는 문장.</div>
+          </div>
+          <div class="field">
+            <label>본문</label>
+            <textarea name="body" class="body-editor" required>${esc(p.body || '')}</textarea>
+            <div class="hint">빈 줄로 문단 구분. *기울임*, **굵게**, &gt; 로 인용문.</div>
+          </div>
+          <div class="row-archive">
+            <div class="field">
+              <label>대표 이미지</label>
+              <input type="text" name="image" id="image-url" value="${esc(p.image || '')}" placeholder="images/portrait.jpg" />
+              <input type="file" accept="image/*" id="image-file" style="margin-top:0.6rem; font-size:0.8rem;" />
+              <div class="hint">archive 전용. 파일 선택하면 업로드 후 경로 자동 입력.</div>
+            </div>
+            <div class="field">
+              <label>출처</label>
+              <input type="text" name="source" value="${esc(p.source || '')}" placeholder="예: Simone Weil · Gravity and Grace" />
+            </div>
+          </div>
+          <div class="form-actions">
+            ${!isNew ? `<button type="button" class="btn-ghost btn-danger" id="del-btn">삭제</button>` : '<div></div>'}
+            <button type="submit" class="btn-primary" id="save-btn">${isNew ? '저장 · 발행' : '저장'}</button>
+          </div>
+        </form>
+      `;
+    }
+
+    function attachLoginHandlers() {
+      document.getElementById('login-btn')?.addEventListener('click', () => window.netlifyIdentity.open());
+    }
+
+    function attachListHandlers() {
+      document.getElementById('logout-btn')?.addEventListener('click', () => window.netlifyIdentity.logout());
+      document.querySelectorAll('.del').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          const id = btn.dataset.id;
+          if (!confirm(`"${id}" 글을 삭제할까요? 되돌릴 수 없습니다.`)) return;
+          state.posts = state.posts.filter(p => p.id !== id);
+          await doSave(`delete ${id}`);
+        });
       });
     }
+
+    function attachEditorHandlers() {
+      document.getElementById('logout-btn')?.addEventListener('click', () => window.netlifyIdentity.logout());
+      const form = document.getElementById('post-form');
+      const kindSel = document.getElementById('kind-sel');
+      const idInput = form.querySelector('input[name="id"]');
+
+      kindSel.addEventListener('change', () => {
+        document.body.className = `kind-${kindSel.value}`;
+        if (state.view === 'new') {
+          idInput.value = suggestId(kindSel.value);
+        }
+      });
+
+      const imgFile = document.getElementById('image-file');
+      if (imgFile) {
+        imgFile.addEventListener('change', async () => {
+          const f = imgFile.files[0];
+          if (!f) return;
+          setStatus('이미지 업로드 중…', '');
+          try {
+            const path = await uploadImage(f);
+            document.getElementById('image-url').value = path;
+            setStatus('이미지 업로드 완료', 'ok');
+          } catch (e) {
+            setStatus(e.message, 'err');
+          }
+        });
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(form);
+        const data = {
+          id: String(fd.get('id') || '').trim(),
+          kind: fd.get('kind'),
+          date: fd.get('date'),
+          title: String(fd.get('title') || '').trim(),
+          excerpt: String(fd.get('excerpt') || '').trim(),
+          body: String(fd.get('body') || ''),
+        };
+        const imageVal = String(fd.get('image') || '').trim();
+        const sourceVal = String(fd.get('source') || '').trim();
+        if (imageVal) data.image = imageVal;
+        if (sourceVal) data.source = sourceVal;
+
+        if (!data.id) { setStatus('ID를 입력하세요', 'err'); return; }
+        if (state.view === 'new' && state.posts.some(p => p.id === data.id)) {
+          setStatus('이미 쓰인 ID입니다', 'err'); return;
+        }
+
+        if (state.view === 'new') {
+          state.posts.push(data);
+        } else {
+          const idx = state.posts.findIndex(p => p.id === state.editId);
+          if (idx >= 0) state.posts[idx] = data; else state.posts.push(data);
+        }
+        await doSave(`${state.view === 'new' ? 'add' : 'update'} ${data.id}`);
+        location.hash = '#/';
+      });
+
+      const delBtn = document.getElementById('del-btn');
+      if (delBtn) {
+        delBtn.addEventListener('click', async () => {
+          if (!confirm('이 글을 삭제할까요? 되돌릴 수 없습니다.')) return;
+          state.posts = state.posts.filter(p => p.id !== state.editId);
+          await doSave(`delete ${state.editId}`);
+          location.hash = '#/';
+        });
+      }
+    }
+
+    async function doSave(msg) {
+      setStatus('저장 중…', '');
+      const saveBtn = document.getElementById('save-btn');
+      if (saveBtn) saveBtn.disabled = true;
+      try {
+        await savePosts(msg);
+        setStatus('저장됨 · 1분 내 반영', 'ok');
+        render();
+      } catch (e) {
+        console.error(e);
+        setStatus(e.message || '저장 실패', 'err');
+        if (saveBtn) saveBtn.disabled = false;
+      }
+    }
+
+    function route() {
+      const h = location.hash || '#/';
+      if (h === '#/' || h === '') { state.view = 'list'; state.editId = null; }
+      else if (h === '#/new') { state.view = 'new'; state.editId = null; }
+      else if (h.startsWith('#/edit/')) {
+        state.view = 'edit';
+        state.editId = decodeURIComponent(h.slice('#/edit/'.length));
+      } else { state.view = 'list'; state.editId = null; }
+      render();
+    }
+    window.addEventListener('hashchange', route);
+
+    async function onAuthReady(user) {
+      state.user = user;
+      root.innerHTML = '<div class="loading">불러오는 중…</div>';
+      try {
+        await fetchPosts();
+        route();
+      } catch (e) {
+        root.innerHTML = `<div class="login-wrap"><h1>오류</h1><p>${esc(e.message)}</p><button class="btn-primary" id="retry-btn">다시 시도</button></div>`;
+        document.getElementById('retry-btn')?.addEventListener('click', () => onAuthReady(user));
+      }
+    }
+
+    window.netlifyIdentity.on('init', user => {
+      if (user) onAuthReady(user);
+      else render();
+    });
+    window.netlifyIdentity.on('login', user => {
+      window.netlifyIdentity.close();
+      onAuthReady(user);
+    });
+    window.netlifyIdentity.on('logout', () => {
+      state.user = null; state.posts = []; state.postsSha = null;
+      render();
+    });
+
+    window.netlifyIdentity.init();
+  })();
   </script>
 </body>
 </html>
