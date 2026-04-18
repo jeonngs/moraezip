@@ -160,6 +160,25 @@
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     .row-archive { display: none; }
     body.kind-archive .row-archive { display: grid; }
+
+    /* body editor with inline image toolbar */
+    .editor-toolbar {
+      display: flex; gap: 0.5rem; flex-wrap: wrap;
+      padding: 0.5rem; border: 1px solid var(--line);
+      border-bottom: none; background: var(--paper);
+    }
+    .editor-toolbar button {
+      background: none; border: 1px solid transparent; color: var(--sub);
+      font: inherit; font-size: 0.72rem; letter-spacing: 0.08em;
+      padding: 0.35rem 0.7rem; cursor: pointer; text-transform: uppercase;
+    }
+    .editor-toolbar button:hover { color: var(--ink); border-color: var(--line); }
+    .editor-toolbar button:disabled { opacity: 0.4; cursor: wait; }
+    .editor-body textarea {
+      margin-top: 0 !important;
+      border-top: none !important;
+    }
+    .editor-hidden-input { display: none; }
     .form-actions {
       display: flex; justify-content: space-between; align-items: center;
       padding-top: 1.5rem; border-top: 1px solid var(--line);
@@ -226,6 +245,18 @@
     const root = document.getElementById('root');
 
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const deriveExcerpt = (body, limit) => {
+      const max = limit || 90;
+      const plain = String(body || '')
+        .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        .replace(/\*([^*]+)\*/g, '$1')
+        .replace(/^>\s*/gm, '')
+        .replace(/\n+/g, ' ')
+        .trim();
+      if (plain.length <= max) return plain;
+      return plain.slice(0, max).replace(/\s+\S*$/, '') + '…';
+    };
     const todayIso = () => {
       const d = new Date();
       return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -429,31 +460,29 @@
               <input type="date" name="date" value="${esc(p.date || '')}" required />
             </div>
           </div>
-          <div class="field">
-            <label>ID</label>
-            <input type="text" name="id" value="${esc(p.id || '')}" required ${isNew ? '' : 'readonly'} />
-            <div class="hint">URL에 쓰이는 고유값. N = note, A = archive.</div>
-          </div>
+          <input type="hidden" name="id" value="${esc(p.id || '')}" />
           <div class="field">
             <label>제목</label>
             <input type="text" name="title" value="${esc(p.title || '')}" required />
           </div>
-          <div class="field">
-            <label>한줄 요약</label>
-            <input type="text" name="excerpt" value="${esc(p.excerpt || '')}" />
-            <div class="hint">목록 페이지에 미리보기로 보이는 문장.</div>
-          </div>
-          <div class="field">
+          <div class="field editor-body">
             <label>본문</label>
-            <textarea name="body" class="body-editor" required>${esc(p.body || '')}</textarea>
-            <div class="hint">빈 줄로 문단 구분. *기울임*, **굵게**, &gt; 로 인용문.</div>
+            <div class="editor-toolbar">
+              <button type="button" data-insert="image" id="insert-img-btn">📷 이미지 삽입</button>
+              <button type="button" data-insert="bold">𝐁 굵게</button>
+              <button type="button" data-insert="italic">𝐼 기울임</button>
+              <button type="button" data-insert="quote">❝ 인용</button>
+              <input type="file" accept="image/*" id="body-image-file" class="editor-hidden-input" />
+            </div>
+            <textarea name="body" class="body-editor" id="body-textarea" required>${esc(p.body || '')}</textarea>
+            <div class="hint">빈 줄로 문단 구분. 한줄 요약은 본문 앞부분에서 자동 생성됩니다.</div>
           </div>
           <div class="row-archive">
             <div class="field">
-              <label>대표 이미지</label>
+              <label>대표 이미지 (archives 목록 썸네일)</label>
               <input type="text" name="image" id="image-url" value="${esc(p.image || '')}" placeholder="images/portrait.jpg" />
               <input type="file" accept="image/*" id="image-file" style="margin-top:0.6rem; font-size:0.8rem;" />
-              <div class="hint">archive 전용. 파일 선택하면 업로드 후 경로 자동 입력.</div>
+              <div class="hint">파일 선택하면 업로드 후 경로 자동 입력.</div>
             </div>
             <div class="field">
               <label>출처</label>
@@ -485,6 +514,17 @@
       });
     }
 
+    function insertAtCursor(textarea, before, after) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selected = textarea.value.slice(start, end);
+      const insertion = before + selected + after;
+      textarea.value = textarea.value.slice(0, start) + insertion + textarea.value.slice(end);
+      const newPos = start + before.length + selected.length;
+      textarea.focus();
+      textarea.setSelectionRange(newPos, newPos);
+    }
+
     function attachEditorHandlers() {
       document.getElementById('logout-btn')?.addEventListener('click', () => window.netlifyIdentity.logout());
       const form = document.getElementById('post-form');
@@ -498,16 +538,55 @@
         }
       });
 
+      // Body toolbar: bold / italic / quote / image insert
+      const bodyArea = document.getElementById('body-textarea');
+      const bodyFile = document.getElementById('body-image-file');
+      const imgBtn = document.getElementById('insert-img-btn');
+
+      form.querySelectorAll('.editor-toolbar button[data-insert]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const kind = btn.dataset.insert;
+          if (kind === 'bold') insertAtCursor(bodyArea, '**', '**');
+          else if (kind === 'italic') insertAtCursor(bodyArea, '*', '*');
+          else if (kind === 'quote') {
+            const s = bodyArea.selectionStart;
+            const prefix = s === 0 || bodyArea.value[s - 1] === '\n' ? '' : '\n\n';
+            insertAtCursor(bodyArea, prefix + '> ', '');
+          }
+          else if (kind === 'image') bodyFile.click();
+        });
+      });
+
+      bodyFile?.addEventListener('change', async () => {
+        const f = bodyFile.files[0];
+        if (!f) return;
+        imgBtn.disabled = true;
+        setStatus('이미지 업로드 중…', '');
+        try {
+          const path = await uploadImage(f);
+          const s = bodyArea.selectionStart;
+          const prefix = s === 0 || bodyArea.value[s - 1] === '\n' ? '\n' : '\n\n';
+          insertAtCursor(bodyArea, prefix + `![](${path})\n\n`, '');
+          setStatus('이미지 삽입 완료', 'ok');
+        } catch (e) {
+          setStatus(e.message, 'err');
+        } finally {
+          imgBtn.disabled = false;
+          bodyFile.value = '';
+        }
+      });
+
+      // Archive cover image (separate from body images)
       const imgFile = document.getElementById('image-file');
       if (imgFile) {
         imgFile.addEventListener('change', async () => {
           const f = imgFile.files[0];
           if (!f) return;
-          setStatus('이미지 업로드 중…', '');
+          setStatus('대표 이미지 업로드 중…', '');
           try {
             const path = await uploadImage(f);
             document.getElementById('image-url').value = path;
-            setStatus('이미지 업로드 완료', 'ok');
+            setStatus('대표 이미지 업로드 완료', 'ok');
           } catch (e) {
             setStatus(e.message, 'err');
           }
@@ -517,23 +596,30 @@
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(form);
+        const kind = fd.get('kind');
+        const body = String(fd.get('body') || '');
+        let id = String(fd.get('id') || '').trim();
+        if (state.view === 'new') {
+          // Re-suggest id with current kind in case nothing changed since render
+          id = suggestId(kind);
+          // Find a free id if somehow suggestId clashed (shouldn't happen)
+          while (state.posts.some(p => p.id === id)) {
+            const n = parseInt(id.slice(1), 10) + 1;
+            id = `${id[0]}${String(n).padStart(2, '0')}`;
+          }
+        }
         const data = {
-          id: String(fd.get('id') || '').trim(),
-          kind: fd.get('kind'),
+          id,
+          kind,
           date: fd.get('date'),
           title: String(fd.get('title') || '').trim(),
-          excerpt: String(fd.get('excerpt') || '').trim(),
-          body: String(fd.get('body') || ''),
+          excerpt: deriveExcerpt(body),
+          body,
         };
         const imageVal = String(fd.get('image') || '').trim();
         const sourceVal = String(fd.get('source') || '').trim();
         if (imageVal) data.image = imageVal;
         if (sourceVal) data.source = sourceVal;
-
-        if (!data.id) { setStatus('ID를 입력하세요', 'err'); return; }
-        if (state.view === 'new' && state.posts.some(p => p.id === data.id)) {
-          setStatus('이미 쓰인 ID입니다', 'err'); return;
-        }
 
         if (state.view === 'new') {
           state.posts.push(data);

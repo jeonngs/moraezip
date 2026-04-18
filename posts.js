@@ -34,12 +34,31 @@
     if (!md) return '';
     const blocks = String(md).replace(/\r\n/g, '\n').split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
     return blocks.map(block => {
+      const onlyImg = block.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+      if (onlyImg) {
+        return `<figure class="post-image"><img src="${escapeHtml(onlyImg[2])}" alt="${escapeHtml(onlyImg[1])}" loading="lazy" /></figure>`;
+      }
       if (block.startsWith('>')) {
         const inner = block.replace(/^>\s?/gm, '');
         return `<blockquote>${inline(escapeHtml(inner)).replace(/\n/g, '<br>')}</blockquote>`;
       }
-      return `<p>${inline(escapeHtml(block)).replace(/\n/g, '<br>')}</p>`;
+      let escaped = escapeHtml(block)
+        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_m, alt, src) => `<img src="${src}" alt="${alt}" loading="lazy" />`);
+      return `<p>${inline(escaped).replace(/\n/g, '<br>')}</p>`;
     }).join('\n');
+  }
+
+  function deriveExcerpt(body, limit) {
+    const max = limit || 90;
+    const plain = String(body || '')
+      .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/^>\s*/gm, '')
+      .replace(/\n+/g, ' ')
+      .trim();
+    if (plain.length <= max) return plain;
+    return plain.slice(0, max).replace(/\s+\S*$/, '') + '…';
   }
 
   window.POSTS_READY = fetch('posts.json', { cache: 'no-store' })
@@ -54,7 +73,7 @@
           date: formatDate(p.date),
           shortDate: formatShortDate(p.date),
           title: p.title,
-          excerpt: p.excerpt || '',
+          excerpt: p.excerpt || deriveExcerpt(p.body),
           body: mdToHtml(p.body),
           image: p.image || undefined,
           source: p.source || undefined,
